@@ -86,7 +86,7 @@ fun ListaLivros(navController: NavController) {
                         ) {
                             Icon(
                                 Icons.Default.Menu,
-                                contentDescription = "Menu",
+                                contentDescription = "Menu:",
                                 tint = Color.White,
                                 modifier = Modifier.size(28.dp)
                             )
