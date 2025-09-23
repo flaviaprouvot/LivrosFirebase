@@ -6,6 +6,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
@@ -17,6 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.flaviaprouvot.livrosfirebase.datasource.Authentication
 import com.flaviaprouvot.livrosfirebase.datasource.DataSource
 import kotlinx.coroutines.launch
 
@@ -27,11 +30,12 @@ fun ListaLivros(navController: NavController) {
     val dataSource = DataSource()
     var listaLivros by remember { mutableStateOf(listOf<Map<String, Any>>()) }
     var mensagem by remember { mutableStateOf("") }
-
+    var livroSelecionado by remember { mutableStateOf<Map<String, Any>?>(null) }
     val scope = rememberCoroutineScope()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
-    // Carregar lista ao abrir a tela
+    val Auth = Authentication()
+
     LaunchedEffect(Unit) {
         dataSource.listarLivros(
             onResult = { livros -> listaLivros = livros },
@@ -59,11 +63,28 @@ fun ListaLivros(navController: NavController) {
                     selected = false,
                     onClick = { navController.navigate("CadastroLivros") }
                 )
+
                 NavigationDrawerItem(
-                    label = { Text("Sair") },
+                    label = { Text("Usuário", fontWeight = FontWeight.Bold) },
                     selected = false,
-                    onClick = { navController.navigate("login") }
+                    onClick = { }
                 )
+                NavigationDrawerItem(
+                    label = { Text(Auth.user?.email.toString()) },
+                    selected = false,
+                    onClick = { }
+                )
+
+                NavigationDrawerItem(
+                    label = { Text( "Logout") },
+                    selected = false,
+                    icon = { Icon(Icons.Default.Close, contentDescription = "")} ,
+                    onClick = {
+                        Auth.logout()
+                        navController.navigate("Login")
+                    }
+                )
+
             }
         }
     ) {
@@ -74,8 +95,7 @@ fun ListaLivros(navController: NavController) {
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = Color(0xFFFFA726),
                         titleContentColor = Color.White,
-
-                        ),
+                    ),
                     navigationIcon = {
                         IconButton(
                             onClick = {
@@ -86,7 +106,7 @@ fun ListaLivros(navController: NavController) {
                         ) {
                             Icon(
                                 Icons.Default.Menu,
-                                contentDescription = "Menu:",
+                                contentDescription = "Menu",
                                 tint = Color.White,
                                 modifier = Modifier.size(28.dp)
                             )
@@ -95,92 +115,122 @@ fun ListaLivros(navController: NavController) {
                 )
             },
             floatingActionButton = {
-                FloatingActionButton(
-                    onClick = { navController.navigate("CadastroLivros") },
-                    containerColor = Color(0xFFFFA726),
-                    contentColor = Color.White
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = "Adicionar livro")
+                if (livroSelecionado == null) {
+                    FloatingActionButton(
+                        onClick = { navController.navigate("CadastroLivros") },
+                        containerColor = Color(0xFFFFA726),
+                        contentColor = Color.White
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = "Adicionar livro")
+                    }
                 }
             }
         ) { innerPadding ->
 
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(12.dp)
-                    .padding(innerPadding)
-            ) {
-                if (listaLivros.isEmpty()) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("Nenhum livro cadastrado ainda 📭", color = Color.Gray)
-                    }
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-
+            if (livroSelecionado == null) {
+                // Tela de lista de livros
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(12.dp)
+                        .padding(innerPadding)
+                ) {
+                    if (listaLivros.isEmpty()) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
                         ) {
-                        items(listaLivros) { livro ->
-                            val titulo = livro["titulo"] as? String ?: "Sem título"
-                            val genero = livro["genero"] as? String ?: "Sem gênero"
-                            val autor = livro["autor"] as? String ?: "Sem autor"
+                            Text("Nenhum livro cadastrado ainda 📭", color = Color.Gray)
+                        }
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            items(listaLivros) { livro ->
+                                val titulo = livro["titulo"] as? String ?: "Sem título"
+                                val genero = livro["genero"] as? String ?: "Sem gênero"
+                                val autor = livro["autor"] as? String ?: "Sem autor"
 
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = Color(0xFFFFE0B2)
-                                ),
-                                elevation = CardDefaults.cardElevation(6.dp)
-                            ) {
-                                Column(modifier = Modifier.padding(16.dp)) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Text(
-                                            text = titulo,
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 18.sp,
-                                            color = Color(0xFFF57C00)
-                                        )
-                                        Icon(
-                                            Icons.Default.Delete,
-                                            contentDescription = "Apagar livro",
-                                            tint = Color.Red,
-                                            modifier = Modifier
-                                                .size(24.dp)
-                                                .clickable {
-                                                    scope.launch {
-                                                        dataSource.deletarLivro(titulo)
-                                                        dataSource.listarLivros(
-                                                            onResult = { livros -> listaLivros = livros },
-                                                            onFailure = { e -> mensagem = "Erro: ${e.message}" }
-                                                        )
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { livroSelecionado = livro },
+                                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFE0B2)),
+                                    elevation = CardDefaults.cardElevation(6.dp)
+                                ) {
+                                    Column(modifier = Modifier.padding(16.dp)) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            Text(
+                                                text = titulo,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 18.sp,
+                                                color = Color(0xFFF57C00)
+                                            )
+                                            Icon(
+                                                Icons.Default.Delete,
+                                                contentDescription = "Apagar livro",
+                                                tint = Color.Red,
+                                                modifier = Modifier
+                                                    .size(24.dp)
+                                                    .clickable {
+                                                        scope.launch {
+                                                            dataSource.deletarLivro(titulo)
+                                                            dataSource.listarLivros(
+                                                                onResult = { livros -> listaLivros = livros },
+                                                                onFailure = { e -> mensagem = "Erro: ${e.message}" }
+                                                            )
+                                                        }
                                                     }
-                                                }
-                                        )
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.height(6.dp))
+                                        Text("Gênero: $genero", fontSize = 14.sp)
+                                        Text("Autor: $autor", fontSize = 14.sp)
                                     }
-                                    Spacer(modifier = Modifier.height(6.dp))
-                                    Text("Gênero: $genero", fontSize = 14.sp)
-                                    Text("Autor: $autor", fontSize = 14.sp)
                                 }
                             }
                         }
                     }
-                }
 
-                if (mensagem.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(mensagem, color = Color.Red)
+                    if (mensagem.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(mensagem, color = Color.Red)
+                    }
+                }
+            } else {
+                // Tela de detalhes do livro
+                val titulo = livroSelecionado!!["titulo"] as? String ?: "Sem título"
+                val genero = livroSelecionado!!["genero"] as? String ?: "Sem gênero"
+                val autor = livroSelecionado!!["autor"] as? String ?: "Sem autor"
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp)
+                        .padding(innerPadding)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = "Voltar",
+                            modifier = Modifier
+                                .size(28.dp)
+                                .clickable { livroSelecionado = null }
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text("Detalhes do Livro", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                    }
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Text("Título: $titulo", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Text("Gênero: $genero", fontSize = 16.sp)
+                    Text("Autor: $autor", fontSize = 16.sp)
                 }
             }
         }
     }
 }
-
-

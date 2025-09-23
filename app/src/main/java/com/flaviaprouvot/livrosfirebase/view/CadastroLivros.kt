@@ -147,12 +147,20 @@ fun CadastroLivros(navController: NavController) {
                                 titulo,
                                 genero,
                                 autor,
-                                onSucess = { mensagem = "✔ Livro salvo com sucesso!" },
-                                onFailure = { mensagem = "❌ Erro ao salvar livro!" }
+                                onSucess = {
+                                    // Só executa se o livro for salvo com sucesso
+                                    mensagem = "✔ Livro salvo com sucesso!"
+                                    // Limpa os campos
+                                    titulo = ""
+                                    genero = ""
+                                    autor = ""
+                                    // Redireciona para a lista de livros
+                                    navController.navigate("ListaLivros")
+                                },
+                                onFailure = { erro ->
+                                    mensagem = "❌ Erro ao salvar livro!"
+                                }
                             )
-                            titulo = ""
-                            genero = ""
-                            autor = ""
                         } else {
                             mensagem = "⚠ Preencha todos os campos."
                         }
@@ -162,8 +170,14 @@ fun CadastroLivros(navController: NavController) {
                         .fillMaxWidth()
                         .height(50.dp)
                 ) {
-                    Text("Cadastrar Livro", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text(
+                        "Cadastrar Livro",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
                 }
+
 
                 Spacer(modifier = Modifier.height(20.dp))
 
@@ -178,11 +192,3 @@ fun CadastroLivros(navController: NavController) {
         }
     }
 }
-
-
-
-
-
-
-
-

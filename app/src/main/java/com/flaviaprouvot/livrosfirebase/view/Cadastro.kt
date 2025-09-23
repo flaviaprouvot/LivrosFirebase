@@ -1,11 +1,31 @@
 package com.flaviaprouvot.livrosfirebase.view
 
-
+import android.graphics.Color.WHITE
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.NavigationDrawerItem
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -17,25 +37,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.flaviaprouvot.livrosfirebase.datasource.Authentication
+import com.flaviaprouvot.livrosfirebase.ui.theme.Purple40
 import kotlinx.coroutines.launch
-import androidx.compose.material3.Text
 
-import androidx.compose.material3.Icon
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginScreen(navController: NavController) {
+fun Cadastro(navController: NavController){
+    //Variaveis
     var email by remember { mutableStateOf("") }
     var senha by remember { mutableStateOf("") }
+    var confirmaSenha by remember { mutableStateOf("") }
     var mensagem by remember { mutableStateOf("") }
 
     var Auth = Authentication()
-    if (Auth.verificaLogado()){
-        navController.navigate("ListaLivros")
-    }
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -64,11 +81,7 @@ fun LoginScreen(navController: NavController) {
         Scaffold(modifier = Modifier.fillMaxSize(),
             topBar = {
                 TopAppBar(
-                    title = { Text("Login", fontWeight = FontWeight.Bold) },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color(0xFFFFA726),
-                        titleContentColor = Color.White
-                    ),
+                    title = { Text("Cadastro de Usuário", fontWeight = FontWeight.Bold) },
                     navigationIcon = {
                         IconButton(
                             onClick = {
@@ -85,9 +98,13 @@ fun LoginScreen(navController: NavController) {
                                 modifier = Modifier.size(36.dp),
                                 tint = Color.White
                             )
-
                         }
-                    }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color(0xFFFFA726),
+                        titleContentColor = Color.White,
+                        navigationIconContentColor = Color.White
+                    )
                 )
             }
         ) { innerPadding ->
@@ -111,22 +128,32 @@ fun LoginScreen(navController: NavController) {
                         senha = novaSenha
                     },
                     label = {
-                        Text("Digite sua senha.")
+                        Text("Digite a sua senha.")
+                    }
+                )
+                OutlinedTextField(
+                    value = confirmaSenha,
+                    onValueChange = { novaSenha ->
+                        confirmaSenha = novaSenha
+                    },
+                    label = {
+                        Text("Confirme a sua senha.")
                     }
                 )
                 Text(mensagem, modifier = Modifier.padding(5.dp), color = Color.Red)
+                Spacer(modifier = Modifier.size(10.dp))
                 Button(
                     onClick = {
-                        if (email.isNotBlank() && senha.isNotBlank()) {
-                            Auth.login(email, senha) { resultado ->
+                        if (senha == confirmaSenha) {
+                            Auth.cadastro(email, senha) { resultado ->
                                 if (resultado == "ok") {
-                                    navController.navigate("ListaLivros")
+                                    navController.navigate("Login") // deixe consistente: "Login" ou "login"
                                 } else {
                                     mensagem = resultado
                                 }
                             }
                         } else {
-                            mensagem = "Email ou Senha não informado"
+                            mensagem = "As senhas não coincidem!"
                         }
                     },
                     colors = ButtonDefaults.buttonColors(
@@ -134,12 +161,13 @@ fun LoginScreen(navController: NavController) {
                         contentColor = Color.White
                     )
                 ) {
-                    Text("Login")
+                    Text("Cadastrar")
                 }
+
                 Spacer(modifier = Modifier.size(10.dp))
-                Text("Cadastre-se aqui!",
+                Text("Faça o Login aqui!",
                     modifier = Modifier.clickable {
-                        navController.navigate("Cadastro")
+                        navController.navigate("Login")
                     },
                     color = Color.DarkGray
                 )
